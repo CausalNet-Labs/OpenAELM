@@ -1,0 +1,5 @@
+[project]
+name="aelm"
+version="0.1.0"
+description="Local-first employment intelligence CLI"
+requires-python=">=3.11"
