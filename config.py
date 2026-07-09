@@ -1,69 +1,55 @@
-"""
-==============================================================================
-AELM CONFIGURATION
-==============================================================================
+"""Central configuration for AELM.
 
-Global configuration for the Advanced Employment & Labor Model.
+Everything runs locally by default. The optional LLM chat feature reads
+its settings from environment variables so no secrets live in code.
 """
 
-APP_NAME = "AELM"
-VERSION = "1.0.0"
+import os
+from dataclasses import dataclass, field
+from typing import Dict
 
-API_URL = "https://router.huggingface.co/v1/chat/completions"
 
-MODEL = "Qwen/Qwen3-235B-A22B-Instruct-2507"
+@dataclass(frozen=True)
+class Config:
+    app_name: str = "AELM"
+    version: str = "2.0.0"
 
-TEMPERATURE = 0.4
-MAX_TOKENS = 2000
-TIMEOUT = 120
-MAX_HISTORY = 40
+    # --- Optional LLM chat (disabled unless a token is provided) ---
+    api_url: str = os.environ.get(
+        "AELM_API_URL", "https://router.huggingface.co/v1/chat/completions"
+    )
+    model: str = os.environ.get("AELM_MODEL", "Qwen/Qwen3-235B-A22B-Instruct-2507")
+    api_token: str = os.environ.get("AELM_HF_TOKEN", "")
+    temperature: float = float(os.environ.get("AELM_TEMPERATURE", "0.4"))
+    max_tokens: int = int(os.environ.get("AELM_MAX_TOKENS", "2000"))
+    timeout: int = int(os.environ.get("AELM_TIMEOUT", "120"))
+    max_history: int = int(os.environ.get("AELM_MAX_HISTORY", "40"))
 
-ALLOW_RESUME_REWRITE = True
-ALLOW_COVER_LETTERS = True
-ALLOW_INTERVIEW_MODE = True
-ALLOW_EXPORT = True
+    # --- Local engine settings ---
+    export_dir: str = os.environ.get("AELM_EXPORT_DIR", "exports")
+    max_score: int = 100
 
-ATS_KEYWORD_WEIGHT = 0.35
-ATS_FORMAT_WEIGHT = 0.20
-ATS_EXPERIENCE_WEIGHT = 0.25
-ATS_SKILL_WEIGHT = 0.20
+    def summary(self) -> Dict[str, str]:
+        return {
+            "Application": self.app_name,
+            "Version": self.version,
+            "Mode": "Local (decentralized)" + (
+                " + optional LLM chat" if self.api_token else ""
+            ),
+            "LLM chat": "enabled" if self.api_token else
+                        "disabled (set AELM_HF_TOKEN to enable)",
+            "Model": self.model if self.api_token else "-",
+            "Export dir": self.export_dir,
+        }
 
-ENABLE_HIRE_PROBABILITY = True
-ENABLE_JOB_RISK = True
-ENABLE_FRAUD_SCAN = True
-ENABLE_ENTRY_BARRIERS = True
-ENABLE_AUTOMATION_SCORE = True
 
-EXPORT_MD = True
-EXPORT_TXT = True
-EXPORT_JSON = True
-EXPORT_PDF = False
-
-MAX_SCORE = 100
-
-COMMANDS = {
-    "help":"Show help menu",
-    "clear":"Clear conversation",
-    "resume":"Load or analyze resume",
-    "job":"Load job description",
-    "analyze":"Run full pipeline",
-    "rewrite":"Generate ATS resume",
-    "ats":"ATS analysis",
-    "coverletter":"Generate cover letter",
-    "interview":"Interview preparation",
-    "dashboard":"Strategic dashboard",
-    "export":"Export results",
-    "config":"Show configuration",
-    "version":"Show version",
-    "exit":"Exit program"
-}
+CONFIG = Config()
 
 BANNER = f"""
 ===========================================================
- {APP_NAME} v{VERSION}
-
+ {CONFIG.app_name} v{CONFIG.version}
  Advanced Employment & Labor Model
-
+ Local-first · No account · No required network access
  Type 'help' for commands.
 ===========================================================
 """
